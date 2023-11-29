@@ -25,13 +25,6 @@ conda create --name py39 python=3.9  # Windows
 # conda create --name py39 python=3.8  # Linux推荐3.8
 ```
 
-> revChatGPT包在Python3.8会被计划中断，需做如下修改
-> 将
-> ```bash
-> env_path/py38/lib/python3.8/site-packages/revChatGPT/__init__.py
-> ```
-> 文件第17行`elif int(...) < 9`修改为`elif int(...) < 8`
-
 #### 2. 安装pytorch于`py39`环境
 
 - 激活`py39`环境
@@ -72,6 +65,7 @@ conda create --name py39 python=3.9  # Windows
 - Linux：
   先安装portaudio
   ```bash
+  apt-get update
   apt install portaudio19-dev  #Ubuntu
   # yum install portaudio-devel  #CentOS
   ```
@@ -90,7 +84,7 @@ conda create --name py39 python=3.9  # Windows
 cd "TTS/vits/monotonic_align"
 mkdir monotonic_align
 python setup.py build_ext --inplace
-cp monotonic_align/*.pyd ./ # linux修改为cp monotonic_align/*.so
+cp monotonic_align/*.pyd ./ # linux修改为cp monotonic_align/*.so ./
 ```
 
 #### 5. 对于不使用Nvidia显卡的电脑
