@@ -154,6 +154,9 @@ class Server:
         tmp_recv_file = f'tmp/{addr_str}_{time.time()}_server_received.wav'
         tmp_proc_file = f'tmp/{addr_str}_{time.time()}_server_processed.wav'
         save_session_json = f'tmp/{args.model}_{only_ip}_session_log.json'
+        # 确保文件所在目录存在
+        if not os.path.exists(os.path.dirname(tmp_recv_file)):
+            os.makedirs(os.path.dirname(tmp_recv_file))
         try:
             local_conn, local_addr = conn, addr  # 接受客户端连接
             logging.info(f"已连接 {local_addr}")  # 记录日志，显示已连接的客户端地址

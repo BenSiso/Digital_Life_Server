@@ -15,14 +15,12 @@ onnxruntime==1.14.1
 openai==1.3.6
 opencc==1.1.7
 PyAudio==0.2.13
-pyopenjtalk==0.3.3
 pypinyin==0.48.0
-PyYAML==6.0
 PyYAML==6.0.1
 Requests==2.31.0
 scipy==1.11.4
 soundfile==0.12.1
-torch==2.0.0+cu118
+# torch==2.0.0+cu118
 transformers==4.28.1
 typeguard==2.13.3
 Unidecode==1.3.7

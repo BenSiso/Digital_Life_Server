@@ -55,7 +55,7 @@ conda create --name py39 python=3.9  # Windows
   ```
 - 国内加速地址（下载可能较快）
   ```bash
-  pip install torch==2.0.0+cpu torchvision torchaudio -f https://mirror.sjtu.edu.cn/pytorch-wheels/torch_stable.html
+  pip3 install torch torchvision torchaudio -f https://mirror.sjtu.edu.cn/pytorch-wheels/torch_stable.html
   ```
 
 - [其他版本组合指南](https://pytorch.org/get-started/locally)
@@ -63,7 +63,7 @@ conda create --name py39 python=3.9  # Windows
 #### 3. 安装项目所需其它依赖项
 
 - Linux：
-  先安装portaudio
+  先[安装portaudio](https://files.portaudio.com/download.html)
   ```bash
   apt-get update
   apt install portaudio19-dev  #Ubuntu
@@ -75,7 +75,7 @@ conda create --name py39 python=3.9  # Windows
   ```
 - Windows：
   ```bash
-  pip install -r requirements_out_of_pytorch.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+  pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
   ```
 
 #### 4. 构建 `monotonic_align`
