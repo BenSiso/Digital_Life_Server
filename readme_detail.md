@@ -128,6 +128,7 @@ run-gpt3.5-api.sh
 | model       | 调用的模型               | 指定使用的GPT模型，可选值：gpt-3.5-turbo、gpt-4、ERNIEBot、ERNIEBot-4                         | ALL              |
 | stream      | 流式回复                | 可有效减少响应时间，可选值：True、False                                                       | ALL              |
 | character   | 使用的角色               | 指定所使用的角色，可选值：paimon、yunfei、catmaid                                             | ALL              |
+| port        | 服务运行的端口号            | 指定服务运行的端口号，默认38438                                                             |                  |
 
 ### 调用示例
 

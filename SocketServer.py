@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import socket
+import sys
 import threading
 import time
 import traceback
@@ -74,6 +75,8 @@ def parse_args():
     # parser.add_argument("--ip", type=str, nargs='?', required=False)
     # 洗脑模式。循环发送提示词
     parser.add_argument("--brainwash", type=str2bool, nargs='?', required=False)
+    # 定义运行的端口号
+    parser.add_argument("--port", type=str, nargs='?', required=False, default=38438)
     return parser.parse_args()
 
 
@@ -100,10 +103,25 @@ class Server:
         self.local_host_2 = socket.gethostbyname(socket.gethostname())  # 获取主机IP地址
 
         self.host = "0.0.0.0"  # 监听所有本机IP
-        self.port = 38438  # 服务器端口号
+        # self.port = int(args_all.port)  # 服务器端口号
+        # 端口号验证和异常处理
+        try:
+            self.port = int(args_all.port)
+            if self.port < 1024 or self.port > 65535:
+                raise ValueError("端口号必须在1024到65535之间")
+        except ValueError as ep:
+            logging.error(f"无效的端口号: {ep}")
+            sys.exit(1)
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # 创建 TCP socket 对象
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 10240000)  # 设置 socket 缓冲区大小
-        self.s.bind((self.host, self.port))  # 将服务器绑定到指定的地址和端口
+        # self.s.bind((self.host, self.port))  # 将服务器绑定到指定的地址和端口
+        # 尝试绑定端口号
+        try:
+            self.s.bind((self.host, self.port))
+            logging.info(f"服务器绑定到端口 {self.port}")
+        except socket.error as ep:
+            logging.error(f"绑定端口 {self.port} 失败: {ep}")
+            sys.exit(1)
         self.lock = threading.Lock()  # 创建锁
 
         # 硬编码的角色映射
