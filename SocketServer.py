@@ -67,14 +67,14 @@ def parse_args():
     # ChatGPT 代理服务器 http://127.0.0.1:7890
     parser.add_argument("--proxy", type=str, nargs='?', required=False)
     # 会话模型
-    parser.add_argument("--model", type=str, nargs='?', required=True)
+    parser.add_argument("--model", type=str, nargs='?', required=True, default="paimon")
     # 流式语音
-    parser.add_argument("--stream", type=str2bool, nargs='?', required=True)
+    parser.add_argument("--stream", type=str2bool, nargs='?', required=False, default=True)
     # 角色 ： paimon、 yunfei、 catmaid
     parser.add_argument("--character", type=str, nargs='?', required=True)
     # parser.add_argument("--ip", type=str, nargs='?', required=False)
     # 洗脑模式。循环发送提示词
-    parser.add_argument("--brainwash", type=str2bool, nargs='?', required=False)
+    parser.add_argument("--brainwash", type=str2bool, nargs='?', required=False, default=False)
     # 定义运行的端口号
     parser.add_argument("--port", type=str, nargs='?', required=False, default=38438)
     return parser.parse_args()
