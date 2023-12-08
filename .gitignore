@@ -29,3 +29,6 @@ test*
 /TTS/vits/output.wav
 updataRequriement.py
 GPT/ERNIEBotAPI_Demo.py
+
+# Python cache files
+**/__pycache__/
