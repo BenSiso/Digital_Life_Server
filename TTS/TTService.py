@@ -41,7 +41,7 @@ def get_text(text, hps):
 
 
 class TTService():
-    def __init__(self, cfg, model, char, speed):
+    def __init__(self, cfg, model, char, speed, device: str):
         """
         初始化 TTS 服务
 
@@ -52,13 +52,14 @@ class TTService():
             speed (float): 音频生成速度
         """
         logging.info('Initializing TTS Service for %s...' % char)
+        self.device = device
         self.hps = utils.get_hparams_from_file(cfg)
         self.speed = speed
         self.net_g = SynthesizerTrn(
             len(symbols),
             self.hps.data.filter_length // 2 + 1,
             self.hps.train.segment_size // self.hps.data.hop_length,
-            **self.hps.model).cuda()
+            **self.hps.model).to(self.device)
         _ = self.net_g.eval()
         _ = utils.load_checkpoint(model, self.net_g, None)
 
@@ -75,8 +76,8 @@ class TTService():
         text = text.replace('~', '！')
         stn_tst = get_text(text, self.hps)
         with torch.no_grad():
-            x_tst = stn_tst.cuda().unsqueeze(0)
-            x_tst_lengths = torch.LongTensor([stn_tst.size(0)]).cuda()
+            x_tst = stn_tst.to(self.device).unsqueeze(0)
+            x_tst_lengths = torch.LongTensor([stn_tst.size(0)]).to(self.device)
             audio = \
                 self.net_g.infer(x_tst, x_tst_lengths, noise_scale=.667, noise_scale_w=0.2, length_scale=self.speed)[0][
                     0, 0].data.cpu().float().numpy()

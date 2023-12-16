@@ -1,5 +1,4 @@
 # 用于接收音频文件并使用一系列服务进行语音识别、自然语言处理和语音合成
-import argparse
 import json
 import logging
 import os
@@ -13,8 +12,9 @@ import librosa
 import requests
 import soundfile
 
+from args_utils import get_args
 import GPT.tune
-from ASR import ASRService
+from ASR import ASRService, whisper
 from GPT import ERNIEBotService
 from GPT import GPTService_v2 as GPTService  # 暂时使用v2替换v1
 from SentimentEngine import SentimentEngine
@@ -32,52 +32,6 @@ file_handler.setFormatter(logging.Formatter(FORMAT))
 file_handler.setLevel(logging.INFO)
 console_logger.addHandler(file_handler)
 console_logger.addHandler(console_handler)
-
-
-def str2bool(v):
-    if v is None:
-        # 当传入None时，可以选择返回False或者抛出异常
-        return False  # 或者 raise argparse.ArgumentTypeError("None value is not supported.")
-
-    # 去除字符串两端的空格
-    v = v.strip()
-
-    # 处理常见的True值
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    # 处理常见的False值
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    # 处理空字符串或者其他不支持的值
-    elif not v:
-        # 选择返回False或者抛出异常
-        return False  # 或者 raise argparse.ArgumentTypeError("Empty string is not a valid boolean value.")
-    else:
-        raise argparse.ArgumentTypeError(f"Unsupported value encountered: '{v}'（遇到不支持的值：'{v}'）")
-
-
-def parse_args():
-    # 解析命令行参数
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--APIKey", type=str, nargs='?', required=False)
-    # ERNIEBot app SecretKey
-    parser.add_argument("--SecretKey", type=str, nargs='?', required=False)
-    # ERNIEBot accessToken
-    parser.add_argument("--accessToken", type=str, nargs='?', required=False)
-    # ChatGPT 代理服务器 http://127.0.0.1:7890
-    parser.add_argument("--proxy", type=str, nargs='?', required=False)
-    # 会话模型
-    parser.add_argument("--model", type=str, nargs='?', required=True, default="paimon")
-    # 流式语音
-    parser.add_argument("--stream", type=str2bool, nargs='?', required=False, default=True)
-    # 角色 ： paimon、 yunfei、 catmaid
-    parser.add_argument("--character", type=str, nargs='?', required=True)
-    # parser.add_argument("--ip", type=str, nargs='?', required=False)
-    # 洗脑模式。循环发送提示词
-    parser.add_argument("--brainwash", type=str2bool, nargs='?', required=False, default=False)
-    # 定义运行的端口号
-    parser.add_argument("--port", type=str, nargs='?', required=False, default=38438)
-    return parser.parse_args()
 
 
 # def time_now():
@@ -132,7 +86,11 @@ class Server:
         }
 
         # 语音识别服务
-        self.paraformer = ASRService.ASRService('./ASR/resources/config.yaml')
+        self.asr = None
+        if args_all.whisper:
+            self.asr = whisper.WhisperService(args_all.whisper_model, args_all.device)
+        else:
+            self.asr = ASRService.ASRService('./ASR/resources/config.yaml')
 
         if "gpt" in args_all.model or "GPT" in args_all.model:
             # ChatGPT对话生成服务
@@ -148,7 +106,7 @@ class Server:
                 logging.info("会话标志码" + self.ERNIEBot.access_token)
 
         # 语音合成服务
-        self.tts = TTService.TTService(*self.char_name[args_all.character])
+        self.tts = TTService.TTService(*self.char_name[args_all.character], device=args_all.device)
 
         # 情感分析引擎
         self.sentiment = SentimentEngine.SentimentEngine('SentimentEngine/models/paimon_sentiment.onnx')
@@ -347,7 +305,7 @@ class Server:
         y_mono = librosa.to_mono(y)
         y_mono = librosa.resample(y_mono, orig_sr=sr, target_sr=16000)
         soundfile.write(tmp_recv_file, y_mono, 16000)
-        text = self.paraformer.infer(tmp_recv_file)  # 将语音转换为文本
+        text = self.asr.infer(tmp_recv_file)  # 将语音转换为文本
 
         return text
 
@@ -355,7 +313,7 @@ class Server:
 if __name__ == '__main__':
     try:
         # 解析命令行参数
-        args = parse_args()
+        args = get_args()
         # 创建服务器对象
         server = Server(args)
         # 启动服务器监听
