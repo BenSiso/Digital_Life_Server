@@ -47,13 +47,17 @@ def get_args():
     # 定义运行的端口号
     parser.add_argument("--port", type=str, nargs='?', required=False, default=38438)
     # 是否使用whisper
+    parser.add_argument("--faster_whisper", type=bool, action='store_true', required=False)
     parser.add_argument("--whisper", type=bool, action='store_true', required=False)
+    parser.add_argument("--flash_attn", type=bool, action='store_true', required=False)
     parser.add_argument("--whisper_model", type=str, required=False)
 
     args = parser.parse_args()
 
-    if args.whisper:
-        assert args.whisper_model is not None, "whisper_model is required when using whisper"
+    if args.whisper or args.faster_whisper:
+        assert args.whisper_model is not None, "whisper_model is required when using whisper (or faster whisper)"
+        if args.faster_whisper:
+            args.whisper = False
     
     args.device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f'Using device: {args.device}')

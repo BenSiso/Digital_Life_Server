@@ -87,7 +87,9 @@ class Server:
 
         # 语音识别服务
         self.asr = None
-        if args_all.whisper:
+        if args_all.faster_whisper:
+            self.asr = whisper.FasterWhisperService(args_all.whisper_model, args_all.device)
+        elif args_all.whisper:
             self.asr = whisper.WhisperService(args_all.whisper_model, args_all.device)
         else:
             self.asr = ASRService.ASRService('./ASR/resources/config.yaml')

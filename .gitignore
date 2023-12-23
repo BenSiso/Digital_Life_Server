@@ -1,13 +1,6 @@
 # IDE specific files
 .idea/
 
-# Model files
-ASR/resources/models/am.mvn
-ASR/resources/models/model.onnx
-ASR/resources/models/token_list.pkl
-SentimentEngine/models/paimon_sentiment.onnx
-TTS/models/*
-
 # Build artifacts and compiled Python files
 dist/
 build/
@@ -22,6 +15,7 @@ __pycache__/
 /tmp/*
 
 # Specific files
+*.ipynb
 output.wav
 /SocketServerPG.py
 /SocketServerPG.ipynb
@@ -29,6 +23,13 @@ test*
 /TTS/vits/output.wav
 updataRequriement.py
 GPT/ERNIEBotAPI_Demo.py
+
+# Model files
+ASR/resources/models/am.mvn
+ASR/resources/models/model.onnx
+ASR/resources/models/token_list.pkl
+SentimentEngine/models/paimon_sentiment.onnx
+TTS/models/*
 
 # Python cache files
 **/__pycache__/
