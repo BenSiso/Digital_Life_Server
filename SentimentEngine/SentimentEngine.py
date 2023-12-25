@@ -12,11 +12,13 @@ class SentimentEngine():
 
         self.ort_session = onnxruntime.InferenceSession(onnx_model_path, providers=['CPUExecutionProvider'])
 
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+        # self.tokenizer = BertTokenizer.from_pretrained('/home/paperspace/models/bert-base-chinese')
+        self.tokenizer = BertTokenizer.from_pretrained('/home/paperspace/models/bert-base-multilingual-cased')
 
     def infer(self, text):
         # 使用BertTokenizer对文本进行分词和编码
         tokens = self.tokenizer(text, return_tensors="np")
+        tokens = self.fix_token_ids(tokens)
         input_dict = {
             "input_ids": tokens["input_ids"],
             "attention_mask": tokens["attention_mask"],
@@ -32,6 +34,11 @@ class SentimentEngine():
         predicted = np.argmax(probabilities, axis=1)[0]
         logging.info(f'Sentiment Engine Infer: {predicted}')
         return predicted
+
+    def fix_token_ids(self, tokens):
+        UNK_id = self.tokenizer.convert_tokens_to_ids('[UNK]')
+        tokens['input_ids'][np.where(tokens['input_ids'] > 21127)] = UNK_id
+        return tokens
 
 
 if __name__ == '__main__':

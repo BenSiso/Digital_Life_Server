@@ -295,7 +295,7 @@ class Server:
 
         logging.info(f"{role}记录新至文件：{file_name}")
 
-    def process_voice(self, tmp_recv_file):
+    def process_voice(self, tmp_recv_file) -> str:
         """
         处理语音的方法。
 

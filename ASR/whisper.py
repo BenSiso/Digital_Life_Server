@@ -80,13 +80,13 @@ class FasterWhisperService:
 
 
 if __name__ == '__main__':
-    model_path = "/mnt/g/models/faster-whisper-large-v3/"
+    model_path = "/home/paperspace/models/faster-whisper-large-v3"
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f'Using device: {device}')
 
     service = FasterWhisperService(model_path, device)
 
-    wav_path = "/mnt/c/Users/AgainstEntropy/Documents/录音/录音_mix.wav"
+    wav_path = "/home/paperspace/Digital_Life_Server/ASR/mix.wav"
     result = service.infer(wav_path)
     print(result)
