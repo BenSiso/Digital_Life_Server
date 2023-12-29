@@ -18,7 +18,8 @@ from ASR import ASRService, whisper
 from GPT import ERNIEBotService
 from GPT import GPTService_v2 as GPTService  # 暂时使用v2替换v1
 from SentimentEngine import SentimentEngine
-from TTS import TTService
+# from TTS import TTService
+import Xtts
 from utils.FlushingFileHandler import FlushingFileHandler
 
 console_logger = logging.getLogger()
@@ -108,7 +109,12 @@ class Server:
                 logging.info("会话标志码" + self.ERNIEBot.access_token)
 
         # 语音合成服务
-        self.tts = TTService.TTService(*self.char_name[args_all.character], device=args_all.device)
+        if args_all.xtts:
+            self.tts = Xtts.xTTService(model_dir=args_all.xtts_model, device=args_all.device)
+        else:
+            # TODO: fix this
+            from .TTS import TTService
+            self.tts = TTService.TTService(*self.char_name[args_all.character], device=args_all.device)
 
         # 情感分析引擎
         self.sentiment = SentimentEngine.SentimentEngine('SentimentEngine/models/paimon_sentiment.onnx')
@@ -204,7 +210,7 @@ class Server:
         time.sleep(0.5)
         conn.sendall(b'stream_finished')  # 向客户端发送流式对话结束的通知
 
-    def send_voice(self, resp_text, conn, tmp_proc_file, senti_or=None):
+    def send_voice(self, resp_text, conn, tmp_proc_file, senti_or=None, lang: str= 'en'):
         """
         发送语音回复的方法。
 
@@ -215,7 +221,7 @@ class Server:
         如果指定了情感分析结果（senti_or），则使用指定的情感值发送语音回复；
         否则，根据文本内容进行情感分析并发送语音回复。
         """
-        self.tts.read_save(resp_text, tmp_proc_file, self.tts.hps.data.sampling_rate)  # 将回复文本转换为语音并保存为临时处理文件
+        self.tts.read_save(resp_text, lang, filename=tmp_proc_file)  # 将回复文本转换为语音并保存为临时处理文件
         with open(tmp_proc_file, 'rb') as f:
             send_data = f.read()
         if senti_or:
