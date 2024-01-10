@@ -135,7 +135,7 @@ class Server:
         # 使用客户端地址和端口生成唯一的文件名
         only_ip = addr[0].replace('.', '_')
         addr_str = only_ip + '_' + str(addr[1])
-        tmp_recv_file = f'tmp/{addr_str}_{time.time()}_server_received.wav'
+        tmp_recv_file = f'tmp/{addr_str}_{time.time()}_server_received.mp3'
         tmp_proc_file = f'tmp/{addr_str}_{time.time()}_server_processed.wav'
         save_session_json = f'tmp/{args.model}_{only_ip}_session_log.json'
         # 确保文件所在目录存在
@@ -147,6 +147,10 @@ class Server:
             local_conn.sendall(b'%s' % self.char_name[args.character][2].encode())  # 向客户端发送角色名称
             while True:
                 try:
+                    request_data = conn.recv(1024)
+                    if b"/test" in request_data:
+                        self.handle_test_route(conn)
+                        break
                     resp_text_all = ""
                     file = self.__receive_file(conn)  # 接收文件
                     # logging.info('file received.')
@@ -201,6 +205,19 @@ class Server:
             print(f"客户端 {addr}已离线！")
         except Exception as e_end:
             logging.error(f"意料之外的情况：{e_end}")
+
+    def handle_test_route(client_socket):
+        try:
+            # Send a JSON response for testing purpose
+            response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n"
+            json_data = {"msg": "working outside"}
+            response_data = json.dumps(json_data).encode("utf-8")
+            response_binary = response.encode("utf-8") + response_data
+            client_socket.sendall(response_binary)
+        except Exception as e:
+            print(f"Error handling /test route: {e}")
+        finally:
+            client_socket.close()
 
     @staticmethod
     def notice_stream_end(conn):
