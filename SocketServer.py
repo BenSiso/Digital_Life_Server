@@ -20,6 +20,7 @@ from GPT import GPTService_v2 as GPTService  # 暂时使用v2替换v1
 from SentimentEngine import SentimentEngine
 # from TTS import TTService
 import Xtts
+from utils import read_yaml
 from utils.FlushingFileHandler import FlushingFileHandler
 
 console_logger = logging.getLogger()
@@ -86,12 +87,14 @@ class Server:
             'catmaid': ['TTS/models/catmix.json', 'TTS/models/catmix_107k.pth', 'character_catmaid', 1.2]
         }
 
+        model_configs = read_yaml(args_all.model_configs)
+
         # 语音识别服务
         self.asr = None
         if args_all.faster_whisper:
-            self.asr = whisper.FasterWhisperService(args_all.whisper_model, args_all.device)
+            self.asr = whisper.FasterWhisperService(model_configs['ASR']['faster_whisper_large_v3'], args_all.device)
         elif args_all.whisper:
-            self.asr = whisper.WhisperService(args_all.whisper_model, args_all.device)
+            self.asr = whisper.WhisperService(model_configs['ASR']['whisper_large_v3'], args_all.device)
         else:
             self.asr = ASRService.ASRService('./ASR/resources/config.yaml')
 
@@ -110,7 +113,7 @@ class Server:
 
         # 语音合成服务
         if args_all.xtts:
-            self.tts = Xtts.xTTService(model_dir=args_all.xtts_model, device=args_all.device)
+            self.tts = Xtts.xTTService(model_configs['TTS']['XTTS-v2'], device=args_all.device)
         else:
             # TODO: fix this
             from .TTS import TTService
@@ -162,7 +165,9 @@ class Server:
                             ask_text)
                         for resp_text in generator:  # 进行对话生成
                             resp_text_all += resp_text
-                            self.send_voice(resp_text, conn, tmp_proc_file)  # 保存并发送语音回复
+                            # self.send_voice(resp_text, conn, tmp_proc_file)  # 保存并发送语音回复
+                            # HACK: happy by default for testing other parts
+                            self.send_voice(resp_text, conn, tmp_proc_file, senti_or=0)
                         with self.lock:
                             self.save_session_to_file(resp_text_all, save_session_json,
                                                       "assistant")  # 保存assistant发言日志
@@ -176,7 +181,9 @@ class Server:
                         with self.lock:
                             self.save_session_to_file(generator, save_session_json,
                                                       "assistant")  # 保存assistant发言日志
-                        self.send_voice(generator, conn, tmp_proc_file)  # 保存并发送语音回复
+                        # self.send_voice(generator, conn, tmp_proc_file)  # 保存并发送语音回复
+                        # HACK: happy by default for testing other parts
+                        self.send_voice(generator, conn, tmp_proc_file, senti_or=0)  
                         self.notice_stream_end(conn)  # 通知流式对话结束
 
                 except (ConnectionAbortedError, requests.exceptions.RequestException) as e_gpt:
@@ -187,7 +194,7 @@ class Server:
                     else:
                         logging.error(e_gpt.__str__())
                         logging.info(f'GPT运行出现错误: {GPT.tune.error_reply}')
-                        self.send_voice(GPT.tune.error_reply, conn, tmp_proc_file, 1)  # 发送错误的语音回复
+                        self.send_voice(GPT.tune.error_reply, conn, tmp_proc_file, senti_or=1)  # 发送错误的语音回复
                         with self.lock:
                             self.save_session_to_file(f"发送错误回复: {GPT.tune.error_reply}", save_session_json,
                                                       "assistant")  #
@@ -210,7 +217,8 @@ class Server:
         time.sleep(0.5)
         conn.sendall(b'stream_finished')  # 向客户端发送流式对话结束的通知
 
-    def send_voice(self, resp_text, conn, tmp_proc_file, senti_or=None, lang: str= 'en'):
+    def send_voice(self, resp_text: str, conn, tmp_proc_file: str, 
+                   senti_or: int = None, lang: str= 'en'):
         """
         发送语音回复的方法。
 

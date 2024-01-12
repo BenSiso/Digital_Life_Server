@@ -1,0 +1,6 @@
+ASR:
+  whisper_large_v3: "/mnt/g/models/whisper-large-v3/"
+  faster_whisper_large_v3: "/mnt/g/models/faster-whisper-large-v3/"
+
+TTS:
+  XTTS-v2: "/mnt/g/models/XTTS-v2"

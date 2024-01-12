@@ -50,20 +50,20 @@ def get_args():
     parser.add_argument("--faster_whisper", type=bool, action='store_true', required=False)
     parser.add_argument("--whisper", type=bool, action='store_true', required=False)
     parser.add_argument("--flash_attn", type=bool, action='store_true', required=False)
-    parser.add_argument("--whisper_model", type=str, required=False)
     # 是否使用Xtts
     parser.add_argument("--xtts", type=bool, action='store_true', required=False)
-    parser.add_argument("--xtts_model", type=str, required=False)
+
+    parser.add_argument("--model_configs", type=str, required=False)
 
     args = parser.parse_args()
 
     if args.whisper or args.faster_whisper:
-        assert args.whisper_model is not None, "whisper_model is required when using whisper (or faster whisper)"
+        assert args.model_configs is not None, "whisper_model is required when using whisper (or faster whisper)"
         if args.faster_whisper:
             args.whisper = False
     
     if args.xtts:
-        assert args.xtts_model is not None, "xtts_model is required when using xtts"
+        assert args.model_configs is not None, "xtts_model is required when using xtts"
     
     args.device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f'Using device: {args.device}')

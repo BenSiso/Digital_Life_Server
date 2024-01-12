@@ -7,7 +7,7 @@ STREAM="True"
 CHARACTER="paimon"
 MODEL="gpt-3.5-turbo"
 OPENAI_API_KEY=""
-WHISPER_MODEL=""
+MODEL_CFG="models.yaml"
 
 # Running the script with specified parameters
 python ${SCRIPT_NAME} \
@@ -16,5 +16,6 @@ python ${SCRIPT_NAME} \
     --stream ${STREAM} \
     --model ${MODEL} \
     --character ${CHARACTER} \
-    --whisper \
-    --whisper_model ${WHISPER_MODEL} 
+    --faster_whisper \
+    --xtts \
+    --model_configs ${MODEL_CFG} 
