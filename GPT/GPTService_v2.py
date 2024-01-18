@@ -21,18 +21,19 @@ class GPTService:
             self.max_history = 8192
         else:
             self.max_history = 4096
-        logging.info('初始化 ChatGPT 服务...')
+        logging.info('Chat gpt session...')
         self.tune = tune.get_tune(args.character, args.model)  # 获取tune-催眠咒
         self.is_executed = False  # 标志变量，注入是否已经启用过，初始设置为 Fal
         self.model = args.model  # GPT 模型名称
         self.is_executed = False  # 标志变量，注入是否已经启用过，初始设置为 False
         # 设置代理
-        proxies = {"http://": args.proxy, "https://": args.proxy} if args.proxy else None
+        proxies = {"https://": args.proxy} if args.proxy else None
         # defaults to os.environ.get("OPENAI_API_KEY")
+        logging.info('key: ' + args.APIKey)
         self.client = OpenAI(
-            api_key=args.APIKey, http_client=httpx.Client(proxies=proxies), organization=None,
+            api_key=args.APIKey
         )
-        logging.info("ChatGPT 已初始化。")
+        logging.info("ChatGPT Initial Successfully。")
 
     def add_to_history(self, user_input, gpt_response):
         # 添加用户输入和GPT响应到历史记录
@@ -52,6 +53,7 @@ class GPTService:
         """
         stime = time.time()
         try:
+            logging.error('----- sfsdf')
             if not self.is_executed:  # 如果不是第一次调用，则不需要在添加系统提示词
                 self.is_executed = True  # 设置 is_executed 标志为 True
                 messages = [{"role": "system", "content": f"{self.tune}"},
@@ -70,13 +72,13 @@ class GPTService:
                 raise ValueError("Invalid response format")
         except json.JSONDecodeError as json_err:
             logging.error(f'JSON 解析失败，错误信息：{json_err}')
-            return "ChatGPT-ask响应失败，返回的数据格式不正确。"
+            return "ChatGPT-askFailed response, input format issue。"
         except (requests.HTTPError, requests.Timeout) as req_err:
-            logging.error(f'网络请求失败，错误信息：{req_err}')
-            return "ChatGPT-ask响应失败，网络请求出错。"
+            logging.error(f'ChatGPT network issue：{req_err}')
+            return "ChatGPT-ask ChatGPT network issue：。"
         except Exception as e:
-            logging.error('ChatGPT 响应失败，错误信息：%s' % e)
-            return "GPT-ask响应失败，详情请及时联系系统管理员。"
+            logging.error('ChatGPT Failed to recive a response：%s' % e)
+            return "GPT-ask Connection issue。"
 
     # 流式处理的逻辑可能需要根据 GPT 的特性进行适当调整
     def ask_stream(self, text):
@@ -94,32 +96,33 @@ class GPTService:
                             {"role": "user", "content": text}] + self.history
             else:
                 messages = self.history + [{"role": "user", "content": text}]
-            completion = self.client.chat.completions.create(model=self.model, messages=messages, stream=True)
+            logging.info(f'Sending chat msgs to ChatGPT')
+            completion = self.client.chat.completions.create(model="gpt-3.5-turbo",messages=messages,stream=True)
+            logging.info(f'Done sending chat msgs to ChatGPT')
             complete_text = ''
+            
             for chunk in completion:
                 if chunk.choices[0].delta.content:
                     message_text = chunk.choices[0].delta.content
                     complete_text += message_text
                     # 检查是否形成完整句子
                     if any(punct in message_text for punct in ["。", "！", "？", "\n"]) and len(complete_text) > 3:
-                        logging.info('ChatGPT 流式响应：%s，@时间 %.2f秒' % (complete_text, time.time() - stime))
+                        logging.info('ChatGPT Streaming response: %s，@time %.2fSecond' % (complete_text, time.time() - stime))
                         yield complete_text.strip()
                         complete_text = ""
                 if chunk.choices[0].finish_reason == "stop":
                     # 当收到结束标志时，如果有剩余文本，处理并返回
                     if complete_text:
-                        logging.info('ChatGPT 流式响应（结束）：%s，@时间 %.2f秒' % (complete_text, time.time() - stime))
+                        logging.info('ChatGPT Streaming response (end)：%s，@时间 %.2f秒' % (complete_text, time.time() - stime))
                         yield complete_text.strip()
                     break  # 退出循环
 
         except json.JSONDecodeError as json_err:
             logging.error(f'JSON 解析失败，错误信息：{json_err}')
-            yield "ChatGPT-ask_stream 响应失败，返回的数据格式不正确。"
-
+            return "ChatGPT-askFailed response, input format issue。"
         except (requests.HTTPError, requests.Timeout) as req_err:
-            logging.error(f'网络请求失败，错误信息：{req_err}')
-            yield "ChatGPT-ask_stream 响应失败，网络请求出错。"
-
+            logging.error(f'ChatGPT network issue：{req_err}')
+            return "ChatGPT-ask ChatGPT network issue：。"
         except Exception as e:
-            logging.error('ChatGPT 流式响应失败，错误信息：%s' % e)
-            yield "GPT-ask_stream 响应失败，详情请及时联系系统管理员。"
+            logging.error('ChatGPT Failed to recive a response：%s' % e)
+            return "GPT-ask Connection issue。"
