@@ -3,7 +3,7 @@
 # Script and configuration parameters
 SCRIPT_NAME="SocketServer.py"
 PROXY="http://127.0.0.1:7890"
-STREAM="True"
+STREAM="False"
 CHARACTER="paimon"
 MODEL="gpt-3.5-turbo"
 OPENAI_API_KEY=""
